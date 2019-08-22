@@ -13,7 +13,7 @@ export default {
   name: "Cascader",
   data() {
     return {
-      isVisible: false
+      isVisible: false,
     };
   },
   //   指令封装
@@ -24,7 +24,7 @@ export default {
         //   addEventListener:将指定的监听器注册到对象上，当该对象触发指定的事件时，指定的回调函数就会被执行。
         document.addEventListener("click", e => {
           // 如果
-          console.log(e, bindings);
+          //   console.log(e, bindings);
           // 如果传参的target属性等于el 或者el.contains(e.target))为true(点击的不是trigger和content返回true)
           if (e.target === el || el.contains(e.target)) {
             //   直接返回
