@@ -4,18 +4,24 @@
     <div class="trigger" @click="toggle">
       <slot></slot>
     </div>
-    <div class="content" v-if="isVisible">显示面板</div>
+    <div class="content" v-if="isVisible">
+      <div class="content-left">
+        <div v-for="(item,key) in options" :key="key">
+          <div @click="select(item)">{{item.label}}</div>
+        </div>
+      </div>
+      <div class="content-right" v-if="listsists && lists.length"
+        <div v-for="(item,key) in lists" :key="key">
+          <div>{{item.label}}</div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 export default {
   name: "Cascader",
-  data() {
-    return {
-      isVisible: false,
-    };
-  },
   //   指令封装
   directives: {
     clickOutside: {
@@ -36,12 +42,33 @@ export default {
       }
     }
   },
+
+  data() {
+    return {
+      isVisible: false,
+      currentSelect: null // 当前点击的第一层儿子
+    };
+  },
   methods: {
+    select(item) {
+      this.currentSelect = item;
+    },
     close() {
       this.isVisible = false;
     },
     toggle() {
       this.isVisible = !this.isVisible;
+    }
+  },
+  computed: {
+    lists() {
+      return this.currentSelect && this.currentSelect.children
+    }
+  },
+  props: {
+    options: {
+      type: Array,
+      default: () => []
     }
   }
 };
@@ -52,5 +79,9 @@ export default {
   width: 150px;
   height: 25px;
   border: 1px solid #cc;
+}
+
+.content {
+  display: flex;
 }
 </style>
