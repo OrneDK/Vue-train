@@ -4,24 +4,17 @@
     <div class="trigger" @click="toggle">
       <slot></slot>
     </div>
-    <div class="content" v-if="isVisible">
-      <div class="content-left">
-        <div v-for="(item,key) in options" :key="key">
-          <div @click="select(item)">{{item.label}}</div>
-        </div>
-      </div>
-      <div class="content-right" v-if="listsists && lists.length"
-        <div v-for="(item,key) in lists" :key="key">
-          <div>{{item.label}}</div>
-        </div>
-      </div>
-    </div>
+    <CascaderItem :options="options"></CascaderItem>
   </div>
 </template>
 
 <script>
+import CascaderItem from './CascaderItem'
 export default {
   name: "Cascader",
+  components: {
+    CascaderItem
+  },
   //   指令封装
   directives: {
     clickOutside: {
@@ -62,7 +55,7 @@ export default {
   },
   computed: {
     lists() {
-      return this.currentSelect && this.currentSelect.children
+      return this.currentSelect && this.currentSelect.children;
     }
   },
   props: {
