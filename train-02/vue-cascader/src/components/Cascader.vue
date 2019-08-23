@@ -1,90 +1,120 @@
 <template>
-  <!-- 1.需求：点击输入框以外的内容应该收起面板   ->>> 将功能扩展为指令 -->
-  <div v-click-outside="close">
-    <div class="trigger" @click="toggle">
-      <slot>{{result}}</slot>
+    <div class="cascader" v-click-outside="close">
+        <div class="title" @click="toggle">
+            {{result}}
+        </div>
+        <div  v-if="isVisible">
+            <CascaderItem :options="options" :value="value" :level="0" @change="change"></CascaderItem>
+            <!-- 先显示第一层内容 -->
+        </div>
     </div>
-    <CascaderItem :options="options" @change="change" :value="value"></CascaderItem>
-  </div>
 </template>
-
 <script>
-import CascaderItem from "./CascaderItem";
+// 可以在全局上挂个事件 ，当点击的时候校验一下点击的是否是cascader中的内容
+// 判断当前点击的是否在某个元素
+
+// 如果你希望对某个元素拥有一系列的操作 你可以封装一个指令 （自定义指令）
+// click-outside
+
+// export default 导出的是值
+// export xxx 导出的是接口
+
+
+// icon button input form 穿梭框  表格 树 日期组件
+import util from '../directives/clickOutside';
+import CascaderItem from './CascaderItem';
+import cloneDeep  from 'lodash/cloneDeep'
 export default {
-  name: "Cascader",
-  components: {
-    CascaderItem
-  },
-  //   指令封装
-  directives: {
-    clickOutside: {
-      //inserted是指令当中的钩子函数(生命周期:被绑定元素插入父节点时调用 (仅保证父节点存在，但不一定已被插入文档中)。)
-      inserted(el, bindings) {
-        //   addEventListener:将指定的监听器注册到对象上，当该对象触发指定的事件时，指定的回调函数就会被执行。
-        document.addEventListener("click", e => {
-          // 如果
-          //   console.log(e, bindings);
-          // 如果传参的target属性等于el 或者el.contains(e.target))为true(点击的不是trigger和content返回true)
-          if (e.target === el || el.contains(e.target)) {
-            //   直接返回
-            return;
-          }
-          // 点击非自己、或者不是自己的儿子就关闭元素(vlue中的参数为close,也就是this.isVisible = false)
-          bindings.value();
-        });
-      }
-    }
-  },
-
-  data() {
-    return {
-      isVisible: false,
-      currentSelect: null // 当前点击的第一层儿子
-    };
-  },
-  methods: {
-    select(item) {
-      this.currentSelect = item;
+    components:{
+        CascaderItem
     },
-    close() {
-      this.isVisible = false;
+    props:{
+        lazyload:{
+            type:Function
+        },
+        value:{
+            type:Array,
+            default:()=>[]
+        },
+        options:{
+            type:Array,
+            default:()=>[]
+        }
     },
-    toggle() {
-      this.isVisible = !this.isVisible;
+    directives:{
+        clickOutside:util.clickOutside,
     },
-    change(value) {
-      this.result = value.map(item=>item.label).join('/')
-      this.$emit('input',value)
-    }
-  },
-  computed: {
-    lists() {
-      return this.currentSelect && this.currentSelect.children;
-    }
-  },
-  props: {
-    // 用户选择的值, 问题2：不能在子组件中更改props，需要拷贝传入属性返回给父组件后再由父组件更新(lodash的clonedeep)
-    options: {
-      type: Array,
-      default: () => []
+    computed:{
+        result(){
+            return this.value.map(item=>item.label).join('/')
+        }
     },
-    // 默认值
-    options: {
-      type: Array,
-      default: () => []
+    methods:{
+        handle(id,children){
+            let cloneOptions = cloneDeep(this.options);
+            // 遍历 树可以采用深度 或者广度
+            // 去树中如何找到当前id 为这一项的那个人
+            let stack = [...cloneOptions];
+            let index = 0;
+            let current;
+            while(current = stack[index++]){ // 广度遍历
+                if(current.id!==id){
+                    if(current.children){
+                        stack = stack.concat(current.children);
+                    }
+                }else{
+                    break;
+                }
+            }
+            if(current){ // 动态的数据加载好后 传递给父亲 
+                current.children = children; // 动态的添加儿子节点
+                this.$emit('update:options',cloneOptions)
+            }
+        },
+        change(value){
+            // 现获取点击的是谁 在调用用户的lazyload方法
+            let lastItem = value[value.length-1];
+            let id = lastItem.id;
+            if(this.lazyload){
+                // 我需要给 当前id 的这一项 添加一个children属性
+                this.lazyload(id,(children)=>this.handle(id,children));
+            }
+            this.$emit('input',value);
+        },
+        close(){ // 关闭弹框
+            this.isVisible = false;
+        },
+        toggle(){ // 切换显示隐藏
+            this.isVisible = !this.isVisible;
+        }
+    },
+    data(){
+        return {isVisible:false}
     }
-  }
-};
+}
 </script>
-
-<style lang="stylus" scoped>
-.trigger {
-  width: 150px;
-  height: 25px;
-  border: 1px solid #cc;
-}
-
-.content {
-  display: flex;
-}
+<style lang="stylus">
+.cascader
+    display inline-block;
+.title 
+    width 150px;
+    height 30px;
+    border 1px solid #ccc;
+.content
+    display flex
+.content-left
+    border:1px solid #ccc;
+    min-height:150px;
+    max-height:150px;
+    overflow-y scroll;
+.label
+    width 80px;
+    padding-left 5px;
+.label:hover
+    background:#999;
+    cursor pointer
+.title
+    line-height 30px;
 </style>
+
+
