@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <Cascader :options="options"></Cascader>
+    <Cascader :options="options" v-model="selected"></Cascader>
   </div>
 </template>
 

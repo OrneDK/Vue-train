@@ -2,14 +2,14 @@
   <!-- 1.需求：点击输入框以外的内容应该收起面板   ->>> 将功能扩展为指令 -->
   <div v-click-outside="close">
     <div class="trigger" @click="toggle">
-      <slot></slot>
+      <slot>{{result}}</slot>
     </div>
-    <CascaderItem :options="options"></CascaderItem>
+    <CascaderItem :options="options" @change="change" :value="value"></CascaderItem>
   </div>
 </template>
 
 <script>
-import CascaderItem from './CascaderItem'
+import CascaderItem from "./CascaderItem";
 export default {
   name: "Cascader",
   components: {
@@ -51,6 +51,10 @@ export default {
     },
     toggle() {
       this.isVisible = !this.isVisible;
+    },
+    change(value) {
+      this.result = value.map(item=>item.label).join('/')
+      this.$emit('input',value)
     }
   },
   computed: {
@@ -59,6 +63,12 @@ export default {
     }
   },
   props: {
+    // 用户选择的值, 问题2：不能在子组件中更改props，需要拷贝传入属性返回给父组件后再由父组件更新(lodash的clonedeep)
+    options: {
+      type: Array,
+      default: () => []
+    },
+    // 默认值
     options: {
       type: Array,
       default: () => []
